@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +16,9 @@ class InformationPage extends StatefulWidget {
 }
 
 class _InformationPage extends State<InformationPage> {
+  var latitude = "Getting latitude".obs;
+  var longitude = "Getting longitude".obs;
+  late StreamSubscription<Position> streamSubscription;
   int _activeStepIndex = 0;
   bool _validateName = false;
   bool _validateHouse = false;
@@ -28,13 +33,50 @@ class _InformationPage extends State<InformationPage> {
   TextEditingController state = TextEditingController();
   TextEditingController pincode = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    getlocation();
+  }
+
+  getlocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+    await Geolocator.requestPermission();
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // return await Geolocator.getCurrentPosition();
+    streamSubscription =
+        Geolocator.getPositionStream().listen((Position position) {
+      latitude.value = '${position.latitude}';
+      longitude.value = '${position.longitude}';
+    });
+  }
+
   Future<void> insertRecord() async {
     if (name.text != "" &&
         houseInfo.text != "" &&
         street.text != "" &&
         city.text != "" &&
         state.text != "" &&
-        pincode.text != "") {
+        pincode.text != "" &&
+        latitude.value != "" &&
+        longitude.value != "") {
       String url = "https://mytiffiny.000webhostapp.com/insert_Record.php";
       var res = await http.post(Uri.parse(url), body: {
         "name": name.text,
@@ -44,7 +86,9 @@ class _InformationPage extends State<InformationPage> {
         "street": street.text,
         "city": city.text,
         "state": state.text,
-        "pincode": pincode.text
+        "pincode": pincode.text,
+        "latitude": latitude.value,
+        "longitude": longitude.value
       });
       // var response = await jsonDecode(res.body);
       // if (response["success"] == "true") {
@@ -52,6 +96,8 @@ class _InformationPage extends State<InformationPage> {
       // } else {
       //   print("Some Issues");
       // }
+      print(latitude.value);
+      print(longitude.value);
     }
   }
 
