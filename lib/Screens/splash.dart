@@ -52,7 +52,11 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         ),
       ),
-      nextScreen: user != null ? MyHome() : MyPhone(),
+      nextScreen: user != null
+          ? MyHome(
+              phone: '',
+            )
+          : MyPhone(),
       splashTransition: SplashTransition.fadeTransition,
       pageTransitionType: PageTransitionType.fade,
       duration: 1500,

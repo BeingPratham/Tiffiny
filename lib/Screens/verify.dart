@@ -1,8 +1,15 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:tiffiny/Screens/Information.dart';
 import 'package:tiffiny/Screens/phone.dart';
+import 'package:http/http.dart' as http;
+import 'package:json_annotation/json_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../utils/sharedpref.dart';
 
 class MyVerify extends StatefulWidget {
   const MyVerify({Key? key}) : super(key: key);
@@ -12,7 +19,56 @@ class MyVerify extends StatefulWidget {
 }
 
 class _MyVerifyState extends State<MyVerify> {
+  late String phone = "";
+  List user = [];
+  late String usr = "";
   final FirebaseAuth auth = FirebaseAuth.instance;
+  Future<String> fetchUser() async {
+    phone = await SharedPrefUtils.readPrefStr('phone');
+    // print("phone" + phone);
+    var data = {"phone_no": phone};
+    var url = "https://mytiffiny.000webhostapp.com/Check_user.php";
+
+    // var response = await http.get(Uri.parse(url));
+    var response = await http.post(Uri.parse(url), body: data);
+    // var message = jsonDecode(response.body);
+    // print(message);
+    var items = [];
+    if (response.statusCode == 200) {
+      // if (response.body.isEmpty) {
+      //   items = "";
+      // } else {
+      //   items = jsonDecode(response.body);
+      // }
+      try {
+        items = jsonDecode(response.body);
+      } catch (e) {
+        print(e);
+      }
+
+      // if (items['Name'] == "") {
+      //   user = "";
+      // }
+      if (items.isNotEmpty) {
+        setState(() {
+          usr = items[0]['Name'];
+          print(usr);
+        });
+      }
+
+      return "Loaded";
+    } else {
+      throw Exception("Failed to load data");
+    }
+    // print(User_detail);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    fetchUser();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +97,13 @@ class _MyVerifyState extends State<MyVerify> {
     );
     var code = "";
     String phone = "";
+    @override
+    void dispose() {
+      // TODO: implement dispose
+      // code.dispose();
+      super.dispose();
+    }
+
     return Scaffold(
       backgroundColor: Colors.amber,
       extendBodyBehindAppBar: true,
@@ -113,6 +176,7 @@ class _MyVerifyState extends State<MyVerify> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10))),
                     onPressed: () async {
+                      print(code);
                       try {
                         PhoneAuthCredential credential =
                             PhoneAuthProvider.credential(
@@ -120,12 +184,16 @@ class _MyVerifyState extends State<MyVerify> {
 
                         // Sign the user in (or link) with the credential
                         await auth.signInWithCredential(credential);
-                        Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    InformationPage(phone: phone)).toString(),
-                            (route) => false);
+                        usr != ""
+                            ? Navigator.pushNamed(
+                                context,
+                                'home',
+                              )
+                            : Navigator.pushNamed(
+                                context,
+                                'information',
+                              );
+                        print("Success");
                       } catch (e) {
                         print(e);
                       }

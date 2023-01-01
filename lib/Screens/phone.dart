@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiffiny/Screens/Information.dart';
+import 'package:tiffiny/Screens/home.dart';
 import 'package:tiffiny/Screens/splash.dart';
 import 'package:tiffiny/main.dart';
+import 'package:tiffiny/utils/sharedpref.dart';
 
 class MyPhone extends StatefulWidget {
   const MyPhone({Key? key}) : super(key: key);
@@ -12,6 +15,19 @@ class MyPhone extends StatefulWidget {
 }
 
 class _MyPhoneState extends State<MyPhone> {
+  void store() async {
+    setState(() {
+      SharedPrefUtils.saveStr('phone', phone);
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+
+    super.dispose();
+  }
+
   TextEditingController countryController = TextEditingController();
   var phone = "";
   @override
@@ -50,7 +66,7 @@ class _MyPhoneState extends State<MyPhone> {
                 height: 10,
               ),
               Text(
-                "We need to register your phone without getting started!",
+                "We need to register your phone before getting started!",
                 style: TextStyle(
                   fontSize: 16,
                 ),
@@ -113,7 +129,8 @@ class _MyPhoneState extends State<MyPhone> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10))),
                     onPressed: () async {
-                      InformationPage(phone: phone);
+                      MyHome(phone: phone);
+                      SharedPrefUtils.saveStr('phone', phone);
                       await FirebaseAuth.instance.verifyPhoneNumber(
                         phoneNumber: '${countryController.text + phone}',
                         verificationCompleted:
@@ -127,11 +144,12 @@ class _MyPhoneState extends State<MyPhone> {
                       );
                     },
                     // onPressed: () {
+                    //   MyHome(phone: phone);
+                    //   SharedPrefUtils.saveStr('phone', phone);
                     //   Navigator.push(
                     //     context,
                     //     MaterialPageRoute(
-                    //         builder: (context) =>
-                    //             InformationPage(phone: phone)),
+                    //         builder: (context) => InformationPage()),
                     //   );
                     // },
                     child: Text("Send the code")),

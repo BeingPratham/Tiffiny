@@ -14,10 +14,13 @@ void main() async {
     initialRoute: 'splash',
     debugShowCheckedModeBanner: false,
     routes: {
-      'splash': (context) => SplashScreen(),
-      'phone': (context) => MyPhone(),
-      'verify': (context) => MyVerify(),
-      'home': (context) => MyHome(),
+      'splash': (context) => const SplashScreen(),
+      'phone': (context) => const MyPhone(),
+      'verify': (context) => const MyVerify(),
+      'information': (context) => const InformationPage(),
+      'home': (context) => MyHome(
+            phone: '',
+          ),
     },
   ));
 }

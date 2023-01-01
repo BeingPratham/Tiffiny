@@ -1,19 +1,28 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:http/http.dart' as http;
 
+import '../utils/sharedpref.dart';
+
 class InformationPage extends StatefulWidget {
-  String phone = "";
-  InformationPage({required this.phone});
+  // String phone = "";
+  const InformationPage({Key? key}) : super(key: key);
 
   @override
   _InformationPage createState() => _InformationPage();
 }
 
 class _InformationPage extends State<InformationPage> {
+  late String phone = "";
+  var latitude = "Getting latitude".obs;
+  var longitude = "Getting longitude".obs;
+  late StreamSubscription<Position> streamSubscription;
+  String datetime = DateTime.now().toString();
   int _activeStepIndex = 0;
   bool _validateName = false;
   bool _validateHouse = false;
@@ -28,30 +37,91 @@ class _InformationPage extends State<InformationPage> {
   TextEditingController state = TextEditingController();
   TextEditingController pincode = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    // getlocation();
+    fetchPhone();
+  }
+
+  fetchPhone() async {
+    phone = await SharedPrefUtils.readPrefStr('phone');
+  }
+
+  getlocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+    await Geolocator.requestPermission();
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // return await Geolocator.getCurrentPosition();
+    // streamSubscription =
+    //     Geolocator.getPositionStream().listen((Position position) {
+    //   latitude.value = '${position.latitude}';
+    //   longitude.value = '${position.longitude}';
+    // });
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    latitude.value = '${position.latitude}';
+    longitude.value = '${position.longitude}';
+  }
+
   Future<void> insertRecord() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    latitude.value = '${position.latitude}';
+    longitude.value = '${position.longitude}';
+    // getlocation();
     if (name.text != "" &&
         houseInfo.text != "" &&
         street.text != "" &&
         city.text != "" &&
         state.text != "" &&
-        pincode.text != "") {
+        pincode.text != "" &&
+        latitude.value != "" &&
+        longitude.value != "") {
       String url = "https://mytiffiny.000webhostapp.com/insert_Record.php";
       var res = await http.post(Uri.parse(url), body: {
         "name": name.text,
-        "phone": widget.phone,
-        "type": "user",
+        "phone": phone,
         "houseInfo": houseInfo.text,
+        "date": datetime,
         "street": street.text,
         "city": city.text,
         "state": state.text,
-        "pincode": pincode.text
+        "pincode": pincode.text,
+        "latitude": latitude.toString(),
+        "longitude": longitude.toString()
       });
-      // var response = await jsonDecode(res.body);
+      print(res.statusCode);
+      // var response = await json.decode(res.body);
       // if (response["success"] == "true") {
-      //   print("Record Inserted");
+      //   print("Record Inserted")s;
       // } else {
       //   print("Some Issues");
       // }
+      print(houseInfo.text);
+      print(street.text);
+      print(city.text);
+      print(state.text);
+      print(pincode.text);
+      print(latitude.toString());
+      print(longitude.toString());
     }
   }
 
@@ -67,7 +137,7 @@ class _InformationPage extends State<InformationPage> {
                   controller: name,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
-                    labelText: widget.phone,
+                    labelText: phone,
                     errorText: _validateName ? 'Value Can\'t Be Empty' : null,
                   ),
                 ),
@@ -237,6 +307,10 @@ class _InformationPage extends State<InformationPage> {
                 children: [
                   _activeStepIndex == 0
                       ? ElevatedButton(
+                          // onPressed: () async {
+                          //   await getlocation();
+                          //   details.onStepContinue;
+                          // },
                           onPressed: details.onStepContinue,
                           child: const Text('Next'),
                         )
