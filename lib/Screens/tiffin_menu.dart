@@ -222,9 +222,11 @@ class _TiffinMenuState extends State<TiffinMenu> {
                                                     height: Dimensions.height10,
                                                   ),
                                                   SmallText(
-                                                      text: kitchen[index]
-                                                              ['price']
-                                                          .toString()),
+                                                      text: "Price:- " +
+                                                          kitchen[index]
+                                                                  ['price']
+                                                              .toString() +
+                                                          "₹"),
                                                   SizedBox(
                                                     height: Dimensions.height10,
                                                   ),
@@ -248,7 +250,9 @@ class _TiffinMenuState extends State<TiffinMenu> {
                         ],
                       ),
 
-                      //
+                      SizedBox(
+                        height: 120,
+                      )
                     ],
                   ),
                 ],

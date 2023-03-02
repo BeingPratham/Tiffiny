@@ -5,6 +5,7 @@ class CartController extends GetxController {
   var ItemLength = new Map().obs;
   List currItems = [].obs;
   List kitchen = [];
+  late Map<String, int> freq;
   void increment(int ind, int price, String name) {
     total.value += price;
 

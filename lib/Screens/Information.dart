@@ -317,7 +317,12 @@ class _InformationPage extends State<InformationPage> {
                       : ElevatedButton(
                           onPressed: () {
                             insertRecord();
-                            // Navigator.pushNamed(context, 'home');
+                            if (houseInfo != "") {
+                              Future.delayed(Duration(seconds: 5), () {
+                                Navigator.pushNamed(context, 'home');
+                                print("reloaded");
+                              });
+                            }
                           },
                           child: const Text('Submit'),
                         ),

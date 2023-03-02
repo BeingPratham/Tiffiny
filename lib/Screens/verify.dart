@@ -42,6 +42,7 @@ class _MyVerifyState extends State<MyVerify> {
       // }
       try {
         items = jsonDecode(response.body);
+        print(items);
       } catch (e) {
         print(e);
       }

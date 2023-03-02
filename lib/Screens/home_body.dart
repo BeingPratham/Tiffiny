@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:dots_indicator/dots_indicator.dart';
@@ -17,14 +19,19 @@ import 'package:http/http.dart' as http;
 import '../utils/dimensions.dart';
 
 class HomeBody extends StatefulWidget {
-  const HomeBody({super.key});
+  List kitchen = [];
+  HomeBody({super.key, required this.kitchen});
 
   @override
   State<HomeBody> createState() => _HomeBodyState();
 }
 
 class _HomeBodyState extends State<HomeBody> {
-  List kitchen = [];
+  ScrollController _controller = new ScrollController();
+  var curr_latitude = "Getting latitude".obs;
+  var curr_longitude = "Getting longitude".obs;
+  // List kitchen = [];
+
   Map<String, List<String>> Menu = {};
   PageController pageController = PageController(viewportFraction: 0.85);
   var _currPageValue = 0.0;
@@ -34,7 +41,8 @@ class _HomeBodyState extends State<HomeBody> {
   @override
   void initState() {
     super.initState();
-    this.fetchkitchen();
+    // this.fetchkitchen();
+    // print(widget.kitchen);
     pageController.addListener(() {
       setState(() {
         _currPageValue = pageController.page!;
@@ -42,24 +50,50 @@ class _HomeBodyState extends State<HomeBody> {
     });
   }
 
-  fetchkitchen() async {
-    var url = "https://mytiffiny.000webhostapp.com/display.php";
-    var response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      var items = json.decode(response.body);
+  // fetchkitchen() async {
+  //   Position position = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.high);
+  //   curr_latitude.value = '${position.latitude}';
+  //   curr_longitude.value = '${position.longitude}';
+  //   var url = "https://mytiffiny.000webhostapp.com/display.php";
+  //   var response = await http.get(Uri.parse(url));
+  //   if (response.statusCode == 200) {
+  //     var items = json.decode(response.body);
 
-      setState(() {
-        kitchen = items;
-        // final List<KitchenDataModel> kitchendata = List.generate(
-        //     kitchen.length,
-        //     (index) => KitchenDataModel(
-        //         '${kitchen[index]['name']}', '${kitchen[index]['city']}'));
-      });
-    } else {
-      setState(() {
-        kitchen = [];
-      });
-    }
+  //     setState(() {
+  //       kitchen = items;
+
+  //       // final List<KitchenDataModel> kitchendata = List.generate(
+  //       //     kitchen.length,
+  //       //     (index) => KitchenDataModel(
+  //       //         '${kitchen[index]['name']}', '${kitchen[index]['city']}'));
+  //     });
+  //   } else {
+  //     setState(() {
+  //       kitchen = [];
+  //     });
+  //   }
+  //   for (int i = 0; i < kitchen.length; i++) {
+  //     kitchen[i]["distance"] = calculateDistance(
+  //             double.parse(widget.kitchen[i]["Latitude"].toString()),
+  //             double.parse(widget.kitchen[i]["Longitude"].toString()),
+  //             double.parse(curr_latitude.toString()),
+  //             double.parse(curr_longitude.toString()))
+  //         .toStringAsFixed(1)
+  //         .toString();
+  //   }
+  //   kitchen.sort((a, b) {
+  //     return double.parse(a["distance"].toString())
+  //         .compareTo(double.parse(b["distance"].toString()));
+  //   });
+  // }
+
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    var p = 0.017453292519943295;
+    var a = 0.5 -
+        cos((lat2 - lat1) * p) / 2 +
+        cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
+    return 12742 * asin(sqrt(a));
   }
 
   @override
@@ -76,15 +110,16 @@ class _HomeBodyState extends State<HomeBody> {
           // color: Colors.red,
           child: PageView.builder(
             controller: pageController,
-            itemCount: kitchen.length,
+            itemCount: widget.kitchen.length,
             itemBuilder: (context, position) {
+              print(widget.kitchen.length);
               return _buildPageItem(position);
             },
           ),
         ),
         // ignore: unnecessary_new
         new DotsIndicator(
-          dotsCount: 2,
+          dotsCount: widget.kitchen.length == 0 ? 2 : widget.kitchen.length,
           position: _currPageValue,
           decorator: DotsDecorator(
             activeColor: Colors.amber,
@@ -123,88 +158,96 @@ class _HomeBodyState extends State<HomeBody> {
             ],
           ),
         ),
-        Container(
-          height: 700,
-          child: ListView.builder(
-              physics: NeverScrollableScrollPhysics(),
-
-              // shrinkWrap: true,
-              itemCount: kitchen.length,
-              itemBuilder: (context, index) {
-                return InkWell(
-                  child: Container(
-                    margin: EdgeInsets.only(
-                        left: Dimensions.width20,
-                        right: Dimensions.width20,
-                        bottom: Dimensions.height10),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(Dimensions.radius20),
-                              color: Colors.white38,
-                              image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: NetworkImage(
-                                      kitchen[index]['Tiffin_Image_url']))),
-                        ),
-                        Expanded(
-                            child: Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(Dimensions.radius20),
-                                bottomRight:
-                                    Radius.circular(Dimensions.radius20)),
-                            color: Colors.white,
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                left: Dimensions.width10,
-                                right: Dimensions.width10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                BigText(text: kitchen[index]['Tiffin_Name']),
-                                SizedBox(
-                                  height: Dimensions.height10,
-                                ),
-                                SizedBox(
-                                  height: Dimensions.height10,
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    IconAndText(
-                                        icon: Icons.location_on,
-                                        text: "1.7km",
-                                        Iconcolor: Colors.amber),
-                                    IconAndText(
-                                        icon: Icons.access_time_rounded,
-                                        text: "32Min",
-                                        Iconcolor: Colors.orangeAccent)
-                                  ],
-                                )
-                              ],
+        SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListView.builder(
+                  physics: NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: widget.kitchen.length,
+                  itemBuilder: (context, index) {
+                    return InkWell(
+                      child: Container(
+                        margin: EdgeInsets.only(
+                            left: Dimensions.width20,
+                            right: Dimensions.width20,
+                            bottom: Dimensions.height10),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                      Dimensions.radius20),
+                                  color: Colors.white38,
+                                  image: DecorationImage(
+                                      fit: BoxFit.cover,
+                                      image: NetworkImage(widget.kitchen[index]
+                                          ['Tiffin_Image_url']))),
                             ),
-                          ),
-                        ))
-                      ],
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) =>
-                            TiffinMenu(ind: kitchen[index]['T_id'])));
-                    print(kitchen[index]['T_id']);
-                  },
-                );
-              }),
+                            Expanded(
+                                child: Container(
+                              height: 100,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                    topRight:
+                                        Radius.circular(Dimensions.radius20),
+                                    bottomRight:
+                                        Radius.circular(Dimensions.radius20)),
+                                color: Colors.white,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    left: Dimensions.width10,
+                                    right: Dimensions.width10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    BigText(
+                                        text: widget.kitchen[index]
+                                            ['Tiffin_Name']),
+                                    SizedBox(
+                                      height: Dimensions.height10,
+                                    ),
+                                    SizedBox(
+                                      height: Dimensions.height10,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        IconAndText(
+                                            icon: Icons.location_on,
+                                            text: widget.kitchen[index]
+                                                    ["distance"] +
+                                                " KM",
+                                            Iconcolor: Colors.amber),
+                                        IconAndText(
+                                            icon: Icons.access_time_rounded,
+                                            text: "32Min",
+                                            Iconcolor: Colors.orangeAccent)
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ))
+                          ],
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => TiffinMenu(
+                                ind: widget.kitchen[index]['T_id'])));
+                        print(widget.kitchen[index]['T_id']);
+                      },
+                    );
+                  })
+            ],
+          ),
         ),
       ],
     );
@@ -246,7 +289,8 @@ class _HomeBodyState extends State<HomeBody> {
                 color: index.isEven ? Color(0xFF69c5df) : Color(0xFF9294cc),
                 image: DecorationImage(
                     fit: BoxFit.cover,
-                    image: NetworkImage(kitchen[index]['Tiffin_Image_url']))),
+                    image: NetworkImage(
+                        widget.kitchen[index]['Tiffin_Image_url']))),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -271,7 +315,7 @@ class _HomeBodyState extends State<HomeBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    BigText(text: kitchen[index]['Tiffin_Name']),
+                    BigText(text: widget.kitchen[index]['Tiffin_Name']),
                     SizedBox(
                       height: Dimensions.height10,
                     ),
@@ -307,7 +351,8 @@ class _HomeBodyState extends State<HomeBody> {
                             Iconcolor: Colors.yellow),
                         IconAndText(
                             icon: Icons.location_on,
-                            text: "1.7km",
+                            text: widget.kitchen[index]["distance"].toString() +
+                                " KM",
                             Iconcolor: Colors.amber),
                         IconAndText(
                             icon: Icons.access_time_rounded,

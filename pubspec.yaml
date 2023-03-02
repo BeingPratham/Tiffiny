@@ -50,6 +50,7 @@ dependencies:
   pay: ^1.0.11
   geolocator: ^9.0.2
   restart_app: ^1.1.1
+  liquid_pull_to_refresh: ^3.0.1
 
 dev_dependencies:
   flutter_test:
