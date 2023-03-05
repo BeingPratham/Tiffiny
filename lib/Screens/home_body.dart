@@ -20,7 +20,13 @@ import '../utils/dimensions.dart';
 
 class HomeBody extends StatefulWidget {
   List kitchen = [];
-  HomeBody({super.key, required this.kitchen});
+  String phone = "";
+  String addr = "";
+  HomeBody(
+      {super.key,
+      required this.kitchen,
+      required this.addr,
+      required this.phone});
 
   @override
   State<HomeBody> createState() => _HomeBodyState();
@@ -41,6 +47,7 @@ class _HomeBodyState extends State<HomeBody> {
   @override
   void initState() {
     super.initState();
+
     // this.fetchkitchen();
     // print(widget.kitchen);
     pageController.addListener(() {
@@ -112,7 +119,7 @@ class _HomeBodyState extends State<HomeBody> {
             controller: pageController,
             itemCount: widget.kitchen.length,
             itemBuilder: (context, position) {
-              print(widget.kitchen.length);
+              // print(widget.kitchen.length);
               return _buildPageItem(position);
             },
           ),
@@ -241,8 +248,9 @@ class _HomeBodyState extends State<HomeBody> {
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => TiffinMenu(
-                                ind: widget.kitchen[index]['T_id'])));
-                        print(widget.kitchen[index]['T_id']);
+                                ind: widget.kitchen[index]['T_id'],
+                                phone: widget.phone,
+                                addr: widget.addr)));
                       },
                     );
                   })

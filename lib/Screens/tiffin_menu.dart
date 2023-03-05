@@ -20,7 +20,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/dimensions.dart';
 
 class TiffinMenu extends StatefulWidget {
-  TiffinMenu({super.key, required this.ind});
+  String phone = "";
+  String addr = "";
+  TiffinMenu(
+      {super.key, required this.ind, required this.phone, required this.addr});
   int ind;
   @override
   State<TiffinMenu> createState() => _TiffinMenuState();
@@ -300,15 +303,19 @@ class _TiffinMenuState extends State<TiffinMenu> {
                           onPressed: () => {
                                 if (_CartController.total.value > 0)
                                   {
-                                    Navigator.of(context)
-                                        .push(MaterialPageRoute(
+                                    Navigator.of(context).push(
+                                        MaterialPageRoute(
                                             builder: (context) => OrderDetail(
-                                                  totalprice: int.parse(
-                                                      _CartController.total
-                                                          .toString()),
-                                                  ItemLength: _CartController
-                                                      .ItemLength,
-                                                )))
+                                                totalprice: int.parse(
+                                                    _CartController.total
+                                                        .toString()),
+                                                ItemLength:
+                                                    _CartController.ItemLength,
+                                                ItemPrice:
+                                                    _CartController.ItemPrice,
+                                                phone: widget.phone,
+                                                addr: widget.addr,
+                                                tiff: widget.ind)))
                                   }
                                 else
                                   {

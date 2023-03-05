@@ -1,5 +1,6 @@
 import 'dart:math';
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -10,7 +11,18 @@ class OrderDetail extends StatefulWidget {
 
   int totalprice;
   var ItemLength = new Map();
-  OrderDetail({super.key, required this.totalprice, required this.ItemLength});
+  var ItemPrice = new Map();
+  String addr = "";
+  String phone = "";
+  int tiff;
+  OrderDetail(
+      {super.key,
+      required this.totalprice,
+      required this.ItemLength,
+      required this.ItemPrice,
+      required this.phone,
+      required this.addr,
+      required this.tiff});
 
   @override
   State<OrderDetail> createState() => _OrderDetailState();
@@ -19,9 +31,29 @@ class OrderDetail extends StatefulWidget {
 class _OrderDetailState extends State<OrderDetail> {
   // final _paymentitems = <PaymentItem>[];
   int Items = 0;
+  String datetime = DateTime.now().toString();
 
   @override
   Widget build(BuildContext context) {
+    Map<String, String> temp_items = widget.ItemLength.map(
+        (key, value) => MapEntry(key.toString(), value.toString()));
+    Map<String, String> temp_price = widget.ItemPrice.map(
+        (key, value) => MapEntry(key.toString(), value.toString()));
+    String items_len = json.encode(temp_items);
+    String prices = json.encode(temp_price);
+    placeOrder() async {
+      var res = await http.post(
+          Uri.parse("https://mytiffiny.000webhostapp.com/insert_orders.php"),
+          body: {
+            "user_id": widget.phone,
+            "tiffin_id": widget.tiff.toString(),
+            "user_addr": widget.addr,
+            "date": datetime,
+            "items": items_len,
+            "price": prices
+          });
+    }
+
     // _paymentitems.add(
     //     PaymentItem(amount: widget.totalprice.toString(), label: 'Kitchen'));
     return Scaffold(
@@ -160,6 +192,7 @@ class _OrderDetailState extends State<OrderDetail> {
                 color: Colors.green, borderRadius: BorderRadius.circular(20)),
             child: InkWell(
               onTap: (() => {
+                    placeOrder(),
                     showDialog(
                       context: context,
                       builder: (BuildContext context) =>

@@ -54,14 +54,13 @@ class _MyHomeState extends State<MyHome> {
 
       setState(() {
         User_detail = items;
+        print(User_detail);
       });
-      currentVal = User_detail[0]['HouseName'];
+      currentVal = User_detail[0]['A_ID'].toString();
       return "Loaded";
     } else {
       throw Exception("Failed to load data");
     }
-
-    // print(User_detail);
   }
 
   var curr_latitude = "Getting latitude".obs;
@@ -95,9 +94,9 @@ class _MyHomeState extends State<MyHome> {
 
       setState(() {
         kitchen = items;
-        for (int i = 0; i < kitchen.length; i++) {
-          print(kitchen[i]['Tiffin_Name']);
-        }
+        // for (int i = 0; i < kitchen.length; i++) {
+        //   print(kitchen[i]['Tiffin_Name']);
+        // }
         // print(kitchen.length);
         // final List<KitchenDataModel> kitchendata = List.generate(
         //     kitchen.length,
@@ -122,7 +121,7 @@ class _MyHomeState extends State<MyHome> {
       return double.parse(a["distance"].toString())
           .compareTo(double.parse(b["distance"].toString()));
     });
-    print(kitchen);
+    // print(kitchen);
   }
 
   @override
@@ -189,11 +188,16 @@ class _MyHomeState extends State<MyHome> {
                                       SmallText(text: item['Street'])
                                     ],
                                   ),
-                                  value: item['HouseName'],
+                                  value: item['A_ID'].toString(),
                                 );
                               }).toList(),
                               onChanged: (newVal) {
                                 setState(() {
+                                  print(newVal);
+                                  HomeBody(
+                                      kitchen: kitchen,
+                                      addr: newVal.toString(),
+                                      phone: phone);
                                   currentVal = newVal.toString();
                                 });
                               },
@@ -232,8 +236,7 @@ class _MyHomeState extends State<MyHome> {
               child: SingleChildScrollView(
             // physics: NeverScrollableScrollPhysics(),
             child: HomeBody(
-              kitchen: kitchen,
-            ),
+                kitchen: kitchen, addr: currentVal.toString(), phone: phone),
           )),
         ],
       ),
